@@ -16,10 +16,11 @@ import os
 
 app = Flask(__name__)
 
-# 🔐 use variável de ambiente no Railway
-app.secret_key = os.environ.get("SECRET_KEY", "chave_padrao_trocar")
+# 🔐 segurança via variáveis de ambiente
+app.secret_key = os.environ.get("SECRET_KEY", "trocar_essa_chave")
 
-LOG_FILE = "logs.json"
+# 📂 usar /tmp no Railway
+LOG_FILE = "/tmp/logs.json"
 
 # ================= IP =================
 def get_real_ip(req):
