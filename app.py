@@ -1,13 +1,3 @@
-# Adicione limite para evitar DoS
-def load_logs():
-    if not os.path.exists(LOG_FILE):
-        return []
-    
-    # Verificar tamanho máximo
-    if os.path.getsize(LOG_FILE) > 10 * 1024 * 1024:  # 10MB
-        print("Arquivo de logs muito grande")
-        return []
-    # ... resto do código
 from flask import Flask, request, render_template_string, redirect, session
 from datetime import datetime
 import requests
@@ -16,10 +6,10 @@ import os
 
 app = Flask(__name__)
 
-# 🔐 segurança via variáveis de ambiente
+# 🔐 chave segura via variável de ambiente
 app.secret_key = os.environ.get("SECRET_KEY", "trocar_essa_chave")
 
-# 📂 usar /tmp no Railway
+# 📂 arquivo temporário no Railway
 LOG_FILE = "/tmp/logs.json"
 
 # ================= IP =================
@@ -41,12 +31,17 @@ def get_ip_info(ip):
 
 # ================= LOAD =================
 def load_logs():
-    if not os.path.exists(LOG_FILE):
-        return []
     try:
+        if not os.path.exists(LOG_FILE):
+            with open(LOG_FILE, "w", encoding="utf-8") as f:
+                json.dump([], f)
+            return []
+
         with open(LOG_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
-    except:
+
+    except Exception as e:
+        print("Erro ao carregar logs:", e)
         return []
 
 # ================= SAVE =================
@@ -146,10 +141,11 @@ def painel():
 def export():
     if not os.path.exists(LOG_FILE):
         return "Sem logs ainda"
+
     with open(LOG_FILE, "r", encoding="utf-8") as f:
         return f.read()
 
 # ================= RUN =================
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
