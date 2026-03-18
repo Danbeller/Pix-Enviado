@@ -2,9 +2,12 @@ from flask import Flask, request, render_template_string, redirect, session
 from datetime import datetime
 import requests
 import json
+import os
 
 app = Flask(__name__)
-app.secret_key = "123456"  # troque isso!
+
+# 🔐 use variável de ambiente no Railway
+app.secret_key = os.environ.get("SECRET_KEY", "chave_padrao_trocar")
 
 LOG_FILE = "logs.json"
 
@@ -19,16 +22,18 @@ def get_ip_info(ip):
     try:
         res = requests.get(f"http://ip-api.com/json/{ip}", timeout=5)
         data = res.json()
-        if data['status'] == 'success':
+        if data.get('status') == 'success':
             return data
-    except:
-        pass
+    except Exception as e:
+        print("Erro GEO:", e)
     return {}
 
 # ================= LOAD =================
 def load_logs():
+    if not os.path.exists(LOG_FILE):
+        return []
     try:
-        with open(LOG_FILE, "r") as f:
+        with open(LOG_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     except:
         return []
@@ -37,8 +42,8 @@ def load_logs():
 def save_log(entry):
     logs = load_logs()
     logs.append(entry)
-    with open(LOG_FILE, "w") as f:
-        json.dump(logs, f, indent=2)
+    with open(LOG_FILE, "w", encoding="utf-8") as f:
+        json.dump(logs, f, indent=2, ensure_ascii=False)
 
 # ================= HOME =================
 @app.route('/')
@@ -69,12 +74,15 @@ def home():
     return "<h3>Carregando documento...</h3>"
 
 # ================= LOGIN =================
-@app.route('/login', methods=['GET','POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
+    senha_correta = os.environ.get("ADMIN_PASSWORD", "admin123")
+
     if request.method == 'POST':
-        if request.form.get("senha") == "admin123":
+        if request.form.get("senha") == senha_correta:
             session['logado'] = True
             return redirect('/painel')
+
     return '''
     <form method="post" style="text-align:center;margin-top:100px;">
         <h2>Painel Seguro</h2>
@@ -125,8 +133,12 @@ def painel():
 # ================= EXPORT =================
 @app.route('/export')
 def export():
-    return open(LOG_FILE).read()
+    if not os.path.exists(LOG_FILE):
+        return "Sem logs ainda"
+    with open(LOG_FILE, "r", encoding="utf-8") as f:
+        return f.read()
 
 # ================= RUN =================
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)

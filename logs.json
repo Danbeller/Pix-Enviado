@@ -9,5 +9,16 @@
     "hora": "18/03/2026 16:52:57",
     "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
     "repetido": false
+  },
+  {
+    "ip": "192.168.1.8",
+    "cidade": "N/A",
+    "pais": "N/A",
+    "isp": "N/A",
+    "lat": null,
+    "lon": null,
+    "hora": "18/03/2026 17:28:06",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+    "repetido": false
   }
 ]
