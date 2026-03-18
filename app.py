@@ -1,3 +1,13 @@
+# Adicione limite para evitar DoS
+def load_logs():
+    if not os.path.exists(LOG_FILE):
+        return []
+    
+    # Verificar tamanho máximo
+    if os.path.getsize(LOG_FILE) > 10 * 1024 * 1024:  # 10MB
+        print("Arquivo de logs muito grande")
+        return []
+    # ... resto do código
 from flask import Flask, request, render_template_string, redirect, session
 from datetime import datetime
 import requests
