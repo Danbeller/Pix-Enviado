@@ -1,5 +1,6 @@
 from flask import Flask, request, render_template_string, redirect, session
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import requests
 import json
 import os
@@ -57,7 +58,7 @@ def save_log(entry):
 def home():
     ip = get_real_ip(request)
     ua = request.headers.get('User-Agent')
-    now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    now = datetime.now(ZoneInfo("America/Sao_Paulo")).strftime("%d/%m/%Y %H:%M:%S")
 
     info = get_ip_info(ip)
 
@@ -83,7 +84,7 @@ def home():
 # ================= LOGIN =================
 @app.route('/login', methods=['GET','POST'])
 def login():
-    senha = os.environ.get("ADMIN_PASSWORD", "admin123")
+    senha = os.environ.get("ADMIN_PASSWORD", "Admin1307")
 
     if request.method == 'POST':
         if request.form.get("senha") == senha:
@@ -120,6 +121,9 @@ def painel():
     <body>
 
     <h1>Painel de Rastreamento</h1>
+    <a href="/limpar" onclick="return confirm('Apagar todos os registros?')">
+        <button style="background:red;color:white;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;margin:10px;">🗑️ Apagar Registros</button>
+    </a>
 
     {% for l in logs %}
         <div class="card">
@@ -137,6 +141,17 @@ def painel():
     """
 
     return render_template_string(html, logs=logs)
+
+# ================= CLEAR =================
+@app.route('/limpar')
+def limpar():
+    if not session.get('logado'):
+        return redirect('/login')
+
+    with open(LOG_FILE, "w", encoding="utf-8") as f:
+        json.dump([], f)
+
+    return redirect('/painel')
 
 # ================= EXPORT =================
 @app.route('/export')
